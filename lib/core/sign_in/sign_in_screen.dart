@@ -1,6 +1,9 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nova_poshta_mail_tracker/core/sign_in/widgets/forgot_password_button.dart';
 import 'package:nova_poshta_mail_tracker/core/widgets/account_option.dart';
+import 'package:nova_poshta_mail_tracker/core/widgets/firebase_test_panel.dart';
 import 'package:nova_poshta_mail_tracker/core/favorites/favorites_screen.dart';
 import 'package:nova_poshta_mail_tracker/core/forgot_password/forgot_password_screen.dart';
 import 'package:nova_poshta_mail_tracker/core/sign_up/sign_up_screen.dart';
@@ -97,6 +100,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   // Open forgot password screen.
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
+                      settings: const RouteSettings(name: 'forgot_password'),
                       builder: (context) => const ForgotPasswordScreen(),
                     ),
                   );
@@ -110,9 +114,13 @@ class _SignInScreenState extends State<SignInScreen> {
               // LogIn Button
               NovaMainButton(
                 onPressed: () {
+                  // Log the standard Analytics "login" event.
+                  FirebaseAnalytics.instance.logLogin(loginMethod: 'email');
+
                   // Open FavoritesScreen.
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
+                      settings: const RouteSettings(name: 'favorites'),
                       builder: (context) => const FavoritesScreen(),
                     ),
                   );
@@ -132,11 +140,18 @@ class _SignInScreenState extends State<SignInScreen> {
                   // Open sign up screen.
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
+                      settings: const RouteSettings(name: 'sign_up'),
                       builder: (context) => const SignUpScreen(),
                     ),
                   );
                 },
               ),
+
+              // Firebase test buttons (visible only in debug builds)
+              if (kDebugMode) ...[
+                const SizedBox(height: 16),
+                const FirebaseTestPanel(),
+              ],
             ],
           ),
         ),

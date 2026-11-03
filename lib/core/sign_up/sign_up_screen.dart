@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:nova_poshta_mail_tracker/core/widgets/account_option.dart';
 import 'package:nova_poshta_mail_tracker/core/favorites/favorites_screen.dart';
@@ -115,9 +116,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 // Register Button
                 NovaMainButton(
                   onPressed: () {
+                    // Log the standard Analytics "sign_up" event.
+                    FirebaseAnalytics.instance.logSignUp(signUpMethod: 'email');
+
                     // Open favorites screen.
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
+                        settings: const RouteSettings(name: 'favorites'),
                         builder: (context) => const FavoritesScreen(),
                       ),
                     );

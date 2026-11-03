@@ -73,6 +73,7 @@ class ProfileScreen extends StatelessWidget {
                         // Open EditProfileScreen.
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
+                            settings: const RouteSettings(name: 'edit_profile'),
                             builder: (context) => const EditProfileScreen(),
                           ),
                         );
@@ -102,6 +103,7 @@ class ProfileScreen extends StatelessWidget {
                         // Transfers to sign in screen
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute<void>(
+                            settings: const RouteSettings(name: 'sign_in'),
                             builder: (context) => const SignInScreen(),
                           ),
                           (route) => false,

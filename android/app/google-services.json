@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "7423455245",
+    "project_id": "nova-poshta-tracker",
+    "storage_bucket": "nova-poshta-tracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:7423455245:android:33859a5fee047e67a92544",
+        "android_client_info": {
+          "package_name": "com.example.nova_poshta_mail_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB37thZU7S5kz16QI51yYlNuscqIoI2-Po"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

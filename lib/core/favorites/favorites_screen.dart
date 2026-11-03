@@ -27,6 +27,7 @@ class FavoritesScreen extends StatelessWidget {
                 // Open ProfileScreen.
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
+                    settings: const RouteSettings(name: 'profile'),
                     builder: (context) => const ProfileScreen(),
                   ),
                 );

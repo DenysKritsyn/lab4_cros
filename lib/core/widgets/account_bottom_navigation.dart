@@ -24,6 +24,9 @@ class AccountBottomNavigation extends StatelessWidget {
 
             Navigator.of(context).pushReplacement(
               MaterialPageRoute<void>(
+                settings: RouteSettings(
+                  name: index == 2 ? 'profile' : 'favorites',
+                ),
                 builder: (context) {
                   switch (index) {
                     case 0:
