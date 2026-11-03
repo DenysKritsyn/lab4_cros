@@ -32,7 +32,7 @@ class AuthRepository {
   /// Currently authenticated Firebase user, or `null` if signed out.
   User? get currentUser => _firebaseAuth.currentUser;
 
-  /// User's display name or a default `UserXXXX` fallback.
+  /// User's display name or a default `User XXXX` fallback.
   String get displayName {
     final user = currentUser;
     final name = user?.displayName?.trim();
@@ -41,9 +41,9 @@ class AuthRepository {
     }
     if (user != null) {
       final number = (user.uid.hashCode.abs() % 9000) + 1000;
-      return 'User$number';
+      return 'User $number';
     }
-    return 'User1000';
+    return 'User 0001';
   }
 
   /// User's email address.
@@ -88,7 +88,7 @@ class AuthRepository {
     return 'К';
   }
 
-  /// Registers a new user with [email], [password], and optional [displayName].
+  // Registers a new user with [email], [password], and optional [displayName].
   Future<UserCredential> signUp({
     required String email,
     required String password,
