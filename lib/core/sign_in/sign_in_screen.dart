@@ -1,16 +1,17 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:nova_poshta_mail_tracker/core/sign_in/widgets/forgot_password_button.dart';
-import 'package:nova_poshta_mail_tracker/core/widgets/account_option.dart';
-import 'package:nova_poshta_mail_tracker/core/widgets/firebase_test_panel.dart';
-import 'package:nova_poshta_mail_tracker/core/favorites/favorites_screen.dart';
 import 'package:nova_poshta_mail_tracker/core/forgot_password/forgot_password_screen.dart';
+import 'package:nova_poshta_mail_tracker/core/sign_in/widgets/forgot_password_button.dart';
 import 'package:nova_poshta_mail_tracker/core/sign_up/sign_up_screen.dart';
+import 'package:nova_poshta_mail_tracker/core/text_styles.dart';
+import 'package:nova_poshta_mail_tracker/core/utils/validators.dart';
+import 'package:nova_poshta_mail_tracker/core/widgets/account_option.dart';
 import 'package:nova_poshta_mail_tracker/core/widgets/app_branding.dart';
+import 'package:nova_poshta_mail_tracker/core/widgets/firebase_test_panel.dart';
 import 'package:nova_poshta_mail_tracker/core/widgets/nova_input.dart';
 import 'package:nova_poshta_mail_tracker/core/widgets/nova_main_button.dart';
-import 'package:nova_poshta_mail_tracker/core/text_styles.dart';
+import 'package:nova_poshta_mail_tracker/data/auth/auth_exception.dart';
+import 'package:nova_poshta_mail_tracker/data/auth/auth_repository.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -20,12 +21,11 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final TextEditingController _emailController = TextEditingController(
-    text: 'some.mail@gmail.com',
-  );
-  final TextEditingController _passwordController = TextEditingController(
-    text: '*********',
-  );
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _isLoading = false;
 
   // Main application color
   static const Color applicationMainColor = Color(0xFFE22629);
@@ -37,6 +37,52 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
+  Future<void> _handleSignIn() async {
+    if (_isLoading) return;
+    FocusScope.of(context).unfocus();
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await AuthRepository.instance.signIn(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Успішний вхід в обліковий запис'),
+            backgroundColor: Color(0xFF009B50),
+          ),
+        );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,114 +91,121 @@ class _SignInScreenState extends State<SignInScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
 
-            children: [
-              const SizedBox(height: 12),
+              children: [
+                const SizedBox(height: 12),
 
-              // Logo and application's name
-              AppBranding(mainColor: applicationMainColor),
+                // Logo and application's name
+                AppBranding(mainColor: applicationMainColor),
 
-              const SizedBox(height: 36),
+                const SizedBox(height: 36),
 
-              // Header
-              const Text(
-                'З поверненням!',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF111827),
-                  letterSpacing: -0.5,
+                // Header
+                const Text(
+                  'З поверненням!',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF111827),
+                    letterSpacing: -0.5,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text('Увійдіть у свій акаунт', style: LargeFadeTextStyle()),
+                const SizedBox(height: 8),
+                const Text(
+                  'Увійдіть у свій акаунт',
+                  style: LargeFadeTextStyle(),
+                ),
 
-              const SizedBox(height: 32),
+                const SizedBox(height: 32),
 
-              // Email Input
-              const Text('Електронна пошта', style: SemiBoldTextStyle()),
-              const SizedBox(height: 8),
-              NovaInput(
-                controller: _emailController,
-                placeholder: "some.mail.example@gmail.com",
-                mainColor: applicationMainColor,
-              ),
+                // Email Input
+                const Text('Електронна пошта', style: SemiBoldTextStyle()),
+                const SizedBox(height: 8),
+                NovaInput(
+                  controller: _emailController,
+                  placeholder: "some.mail.example@gmail.com",
+                  mainColor: applicationMainColor,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  enabled: !_isLoading,
+                  validator: Validators.email,
+                ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Password Input
-              const Text('Пароль', style: SemiBoldTextStyle()),
-              const SizedBox(height: 8),
-              NovaInput(
-                controller: _passwordController,
-                placeholder: "*********",
-                mainColor: applicationMainColor,
-                isPassword: true,
-              ),
+                // Password Input
+                const Text('Пароль', style: SemiBoldTextStyle()),
+                const SizedBox(height: 8),
+                NovaInput(
+                  controller: _passwordController,
+                  placeholder: "*********",
+                  mainColor: applicationMainColor,
+                  isPassword: true,
+                  textInputAction: TextInputAction.done,
+                  enabled: !_isLoading,
+                  onFieldSubmitted: (_) => _handleSignIn(),
+                  validator: Validators.loginPassword,
+                ),
 
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              // "Forgot your password?" Button
-              ForgotPasswordButton(
-                onPressed: () {
-                  // Open forgot password screen.
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      settings: const RouteSettings(name: 'forgot_password'),
-                      builder: (context) => const ForgotPasswordScreen(),
-                    ),
-                  );
-                },
-                mainColor: applicationMainColor,
-                fontSize: 13,
-              ),
+                // "Forgot your password?" Button
+                ForgotPasswordButton(
+                  onPressed: () {
+                    if (_isLoading) return;
+                    // Open forgot password screen.
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(name: 'forgot_password'),
+                        builder: (context) => const ForgotPasswordScreen(),
+                      ),
+                    );
+                  },
+                  mainColor: applicationMainColor,
+                  fontSize: 13,
+                ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // LogIn Button
-              NovaMainButton(
-                onPressed: () {
-                  // Log the standard Analytics "login" event.
-                  FirebaseAnalytics.instance.logLogin(loginMethod: 'email');
+                // LogIn Button
+                NovaMainButton(
+                  onPressed: _handleSignIn,
+                  isLoading: _isLoading,
+                  text: 'Увійти',
+                  fontSize: 16,
+                  icon: Icons.login_rounded,
+                  iconSize: 20,
+                  color: applicationMainColor,
+                ),
 
-                  // Open FavoritesScreen.
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      settings: const RouteSettings(name: 'favorites'),
-                      builder: (context) => const FavoritesScreen(),
-                    ),
-                  );
-                },
-                text: 'Увійти',
-                fontSize: 16,
-                icon: Icons.login_rounded,
-                iconSize: 20,
-                color: applicationMainColor,
-              ),
+                // "Don't have an account yet?" Option
+                AccountOption(
+                  text: 'Ще не маєте акаунту?',
+                  actionText: 'Зареєструватися',
+                  onTap: () {
+                    if (_isLoading) return;
+                    // Open sign up screen.
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(name: 'sign_up'),
+                        builder: (context) => const SignUpScreen(),
+                      ),
+                    );
+                  },
+                ),
 
-              // "Don't have an account yet?" Option
-              AccountOption(
-                text: 'Ще не маєте акаунту?',
-                actionText: 'Зареєструватися',
-                onTap: () {
-                  // Open sign up screen.
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      settings: const RouteSettings(name: 'sign_up'),
-                      builder: (context) => const SignUpScreen(),
-                    ),
-                  );
-                },
-              ),
-
-              // Firebase test buttons (visible only in debug builds)
-              if (kDebugMode) ...[
-                const SizedBox(height: 16),
-                const FirebaseTestPanel(),
+                // Firebase test buttons (visible only in debug builds)
+                if (kDebugMode) ...[
+                  const SizedBox(height: 16),
+                  const FirebaseTestPanel(),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

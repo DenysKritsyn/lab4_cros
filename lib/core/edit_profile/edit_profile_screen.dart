@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:nova_poshta_mail_tracker/core/edit_profile/widgets/avatar_picker_sheet.dart';
 import 'package:nova_poshta_mail_tracker/core/edit_profile/widgets/phone_numbers.dart';
-import 'package:nova_poshta_mail_tracker/core/widgets/profile_photo.dart';
+import 'package:nova_poshta_mail_tracker/core/text_styles.dart';
+import 'package:nova_poshta_mail_tracker/core/utils/validators.dart';
 import 'package:nova_poshta_mail_tracker/core/widgets/nova_input.dart';
 import 'package:nova_poshta_mail_tracker/core/widgets/nova_main_button.dart';
+import 'package:nova_poshta_mail_tracker/core/widgets/profile_photo.dart';
 import 'package:nova_poshta_mail_tracker/core/widgets/saved_phone_card.dart';
-import 'package:nova_poshta_mail_tracker/core/text_styles.dart';
-
-
+import 'package:nova_poshta_mail_tracker/data/auth/auth_exception.dart';
+import 'package:nova_poshta_mail_tracker/data/auth/auth_repository.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -16,6 +18,7 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final List<SavedPhoneCard> phoneNumbers = [
   SavedPhoneCard(
@@ -40,15 +43,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   ),
 ];
 
-  final TextEditingController _nameController = TextEditingController(
-    text: 'Олена Мельник',
-  );
-  final TextEditingController _emailController = TextEditingController(
-    text: 'olena.melnyk@gmail.com',
-  );
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  String? _selectedPhotoUrl;
+  bool _isLoading = false;
 
   // Main application color
   static const Color applicationMainColor = Color(0xFFE22629);
+
+  @override
+  void initState() {
+    super.initState();
+    final repo = AuthRepository.instance;
+    final user = repo.currentUser;
+    _nameController = TextEditingController(
+      text: user?.displayName?.trim().isNotEmpty == true
+          ? user!.displayName!
+          : repo.displayName,
+    );
+    _emailController = TextEditingController(text: repo.email);
+    _selectedPhotoUrl = repo.photoUrl;
+  }
 
   @override
   void dispose() {
@@ -57,8 +72,95 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _openAvatarPicker() async {
+    if (_isLoading) {
+      return;
+    }
+      
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => AvatarPickerSheet(
+        currentUrl: _selectedPhotoUrl,
+        mainColor: applicationMainColor,
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _selectedPhotoUrl = result.isEmpty ? null : result;
+      });
+    }
+  }
+
+  Future<void> _handleSaveChanges() async {
+    if (_isLoading) return;
+    FocusScope.of(context).unfocus();
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final repo = AuthRepository.instance;
+
+      await repo.updateProfile(
+        displayName: _nameController.text,
+        photoUrl: _selectedPhotoUrl ?? '',
+      );
+
+      final emailVerifySent = await repo.updateEmailIfChanged(
+        newEmail: _emailController.text,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              emailVerifySent
+                  ? 'Профіль оновлено! Перевірте пошту для підтвердження нового email.'
+                  : 'Зміни профілю успішно збережено!',
+            ),
+            backgroundColor: const Color(0xFF009B50),
+          ),
+        );
+      Navigator.of(context).pop();
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final previewInitials = AuthRepository.computeInitials(
+      name: _nameController.text,
+      email: _emailController.text,
+    );
+
     return Theme(
       data: Theme.of(context).copyWith(
         inputDecorationTheme: const InputDecorationTheme(
@@ -78,6 +180,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           // Return button
           leading: IconButton(
             onPressed: () {
+              if (_isLoading) {
+                return;
+              }
               // Return to profile screen.
               Navigator.of(context).pop();
             },
@@ -96,94 +201,102 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Profile Photo
+                  ProfilePhoto(
+                    text: previewInitials,
+                    imageUrl: _selectedPhotoUrl,
+                    mainColor: applicationMainColor,
+                    borderColor: Colors.white,
+                    size: 80,
+                    onPressed: _openAvatarPicker,
+                  ),
+                  const SizedBox(height: 8),
 
-                // Profile Photo
-                ProfilePhoto(
-                  text: 'ОМ',
-                  mainColor: applicationMainColor,
-                  borderColor: Colors.white,
-                  size: 80,
-                  onPressed: () {
-                    // TODO: Choose a profile photo.
-                  },
-                ),
-                const SizedBox(height: 8),
+                  // Name Input
+                  const Text(
+                    'Ім’я та прізвище',
+                    style: SemiBoldTextStyle(),
+                  ),
+                  const SizedBox(height: 8),
+                  NovaInput(
+                    controller: _nameController,
+                    placeholder: 'Ім’я та прізвище',
+                    mainColor: applicationMainColor,
+                    textInputAction: TextInputAction.next,
+                    enabled: !_isLoading,
+                    onChanged: (_) => setState(() {}),
+                    validator: Validators.name,
+                  ),
+                  const SizedBox(height: 16),
 
-                // Name Input
-                const Text(
-                  'Ім’я та прізвище',
-                  style: SemiBoldTextStyle(),
-                ),
-                const SizedBox(height: 8),
-                NovaInput(
-                  controller: _nameController,
-                  placeholder: 'Ім’я та прізвище',
-                  mainColor: applicationMainColor,
-                ),
-                const SizedBox(height: 16),
+                  // Email Input
+                  const Text(
+                    'Електронна пошта',
+                    style: SemiBoldTextStyle(),
+                  ),
+                  const SizedBox(height: 8),
+                  NovaInput(
+                    controller: _emailController,
+                    placeholder: 'name@example.com',
+                    mainColor: applicationMainColor,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    enabled: !_isLoading,
+                    validator: Validators.email,
+                  ),
+                  const SizedBox(height: 12),
 
-                // Email Input
-                const Text(
-                  'Електронна пошта',
-                  style: SemiBoldTextStyle(),
-                ),
-                const SizedBox(height: 8),
-                NovaInput(
-                  controller: _emailController,
-                  placeholder: 'name@example.com',
-                  mainColor: applicationMainColor,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 12),
-
-                // Phone Numbers
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'НОМЕРИ ТЕЛЕФОНУ',
-                        style: BoldFadeTextStyle(),
+                  // Phone Numbers
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'НОМЕРИ ТЕЛЕФОНУ',
+                          style: BoldFadeTextStyle(),
+                        ),
                       ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        // TODO: Add a phone number.
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: applicationMainColor,
-                        padding: EdgeInsets.zero,
+                      TextButton.icon(
+                        onPressed: () {
+                          // TODO: Add a phone number.
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: applicationMainColor,
+                          padding: EdgeInsets.zero,
+                        ),
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text(
+                          'Додати',
+                          style: TextStyle(fontSize: 13),
+                        ),
                       ),
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text(
-                        'Додати',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-                PhoneNumbers(
-                  cards: phoneNumbers,
-                ),
-                const SizedBox(height: 18),
+                    ],
+                  ),
+                  PhoneNumbers(
+                    cards: phoneNumbers,
+                  ),
+                  const SizedBox(height: 18),
 
-                // Save Changes Button
-                NovaMainButton(
-                  onPressed: () {
-                    // TODO: Save profile changes.
-                  },
-                  text: 'Зберегти зміни',
-                  fontSize: 16,
-                  icon: Icons.check_rounded,
-                  iconSize: 20,
-                  height: 54,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  color: applicationMainColor,
-                ),
-              ],
+                  // Save Changes Button
+                  NovaMainButton(
+                    onPressed: _handleSaveChanges,
+                    isLoading: _isLoading,
+                    text: 'Зберегти зміни',
+                    fontSize: 16,
+                    icon: Icons.check_rounded,
+                    iconSize: 20,
+                    height: 54,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    color: applicationMainColor,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

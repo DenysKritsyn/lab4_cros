@@ -11,6 +11,7 @@ class NovaMainButton extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final String text;
   final IconData icon;
+  final bool isLoading;
 
   const NovaMainButton({
     super.key,
@@ -24,6 +25,7 @@ class NovaMainButton extends StatelessWidget {
     this.padding,
     required this.text,
     required this.icon,
+    this.isLoading = false,
   });
 
   @override
@@ -33,10 +35,12 @@ class NovaMainButton extends StatelessWidget {
       height: height,
       margin: margin,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
+          disabledBackgroundColor: color.withValues(alpha: 0.65),
           foregroundColor: Colors.white,
+          disabledForegroundColor: Colors.white,
           elevation: 0,
           padding: padding,
           shape: RoundedRectangleBorder(
@@ -47,7 +51,17 @@ class NovaMainButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: iconSize, color: Colors.white),
+            if (isLoading)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  color: Colors.white,
+                ),
+              )
+            else
+              Icon(icon, size: iconSize, color: Colors.white),
             const SizedBox(width: 8),
             Text(
               text,

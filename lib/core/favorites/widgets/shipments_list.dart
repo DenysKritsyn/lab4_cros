@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nova_poshta_mail_tracker/core/widgets/nova_main_button.dart';
 import 'package:nova_poshta_mail_tracker/core/text_styles.dart';
 
 class ShipmentsList extends StatelessWidget {

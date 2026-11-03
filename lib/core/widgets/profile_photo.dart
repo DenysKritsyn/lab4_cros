@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ProfilePhoto extends StatelessWidget {
-  // Icon takes precedence when both text and icon are provided.
+  // Icon takes precedence when both text and icon are provided, unless imageUrl is set.
   final String? text;
   final IconData? icon;
+  final String? imageUrl;
   final Color mainColor;
   final Color borderColor;
   // Outer avatar diameter, including the border.
@@ -14,6 +15,7 @@ class ProfilePhoto extends StatelessWidget {
     super.key,
     this.text,
     this.icon,
+    this.imageUrl,
     required this.mainColor,
     required this.borderColor,
     required this.size,
@@ -22,6 +24,9 @@ class ProfilePhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final innerRadius = (size / 2 - 3).clamp(0.0, double.infinity);
+    final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
+
     return Center(
       child: Column(
         children: [
@@ -31,20 +36,22 @@ class ProfilePhoto extends StatelessWidget {
                 radius: size / 2,
                 backgroundColor: borderColor,
                 child: CircleAvatar(
-                  radius: (size / 2 - 3).clamp(0.0, double.infinity),
-                  backgroundColor: Color(0xFFFFF0F1),
+                  radius: innerRadius,
+                  backgroundColor: const Color(0xFFFFF0F1),
+                  foregroundImage: hasImage ? NetworkImage(imageUrl!) : null,
+                  onForegroundImageError: hasImage ? (_, _) {} : null,
                   child: icon != null
-                    ? Icon(icon, size: size * 0.4, color: mainColor)
-                    : text != null
-                    ? Text(
-                        text!,
-                        style: TextStyle(
-                          fontSize: size * 0.3,
-                          fontWeight: FontWeight.w700,
-                          color: mainColor,
-                        ),
-                      )
-                    : null,
+                      ? Icon(icon, size: size * 0.4, color: mainColor)
+                      : text != null
+                      ? Text(
+                          text!,
+                          style: TextStyle(
+                            fontSize: size * 0.3,
+                            fontWeight: FontWeight.w700,
+                            color: mainColor,
+                          ),
+                        )
+                      : null,
                 ),
               ),
               Positioned(

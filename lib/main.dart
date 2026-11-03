@@ -4,7 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:nova_poshta_mail_tracker/core/sign_in/sign_in_screen.dart';
+import 'package:nova_poshta_mail_tracker/core/auth_gate.dart';
 import 'package:nova_poshta_mail_tracker/firebase_options.dart';
 
 Future<void> main() async {
@@ -37,7 +37,7 @@ class MainApp extends StatelessWidget {
       // Automatically logs 'screen_view' events on every route change.
       // Screen names are taken from 'RouteSettings.name' of each route.
       navigatorObservers: [FirebaseAnalyticsObserver(analytics: analytics)],
-      home: const SignInScreen(),
+      home: const AuthGate(),
     );
   }
 }

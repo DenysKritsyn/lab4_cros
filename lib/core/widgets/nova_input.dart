@@ -7,6 +7,12 @@ class NovaInput extends StatefulWidget {
   final Color mainColor;
   final bool isPassword;
   final TextInputType? keyboardType;
+  final String? Function(String?)? validator;
+  final AutovalidateMode? autovalidateMode;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onFieldSubmitted;
+  final ValueChanged<String>? onChanged;
+  final bool enabled;
 
   const NovaInput({
     super.key,
@@ -15,6 +21,12 @@ class NovaInput extends StatefulWidget {
     required this.mainColor,
     this.isPassword = false,
     this.keyboardType,
+    this.validator,
+    this.autovalidateMode,
+    this.textInputAction,
+    this.onFieldSubmitted,
+    this.onChanged,
+    this.enabled = true,
   });
 
   @override
@@ -36,6 +48,12 @@ class _NovaInputState extends State<NovaInput> {
       controller: widget.controller,
       obscureText: widget.isPassword ? _obscureText : false,
       keyboardType: widget.keyboardType,
+      validator: widget.validator,
+      autovalidateMode: widget.autovalidateMode,
+      textInputAction: widget.textInputAction,
+      onFieldSubmitted: widget.onFieldSubmitted,
+      onChanged: widget.onChanged,
+      enabled: widget.enabled,
       style: const BaseTextStyle(),
       decoration: InputDecoration(
         hintText: widget.placeholder,
@@ -71,6 +89,14 @@ class _NovaInputState extends State<NovaInput> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: widget.mainColor, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 1.2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 1.5),
         ),
       ),
     );
