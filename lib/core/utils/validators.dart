@@ -32,8 +32,8 @@ class Validators {
     if (value == null || value.isEmpty) {
       return 'Введіть пароль';
     }
-    if (value.length < 6) {
-      return 'Пароль має містити щонайменше 6 символів';
+    if (value.length < 8) {
+      return 'Пароль має містити щонайменше 8 символів';
     }
     return null;
   }

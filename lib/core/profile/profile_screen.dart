@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:nova_poshta_mail_tracker/core/auth_gate.dart';
 import 'package:nova_poshta_mail_tracker/core/change_password/change_password_screen.dart';
 import 'package:nova_poshta_mail_tracker/core/edit_profile/edit_profile_screen.dart';
 import 'package:nova_poshta_mail_tracker/core/profile/widgets/edit_profile_button.dart';
@@ -185,7 +186,13 @@ class ProfileScreen extends StatelessWidget {
     try {
       await AuthRepository.instance.signOut();
       if (!context.mounted) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          settings: const RouteSettings(name: 'auth_gate'),
+          builder: (context) => const AuthGate(),
+        ),
+        (route) => false,
+      );
     } on AuthException catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context)

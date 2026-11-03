@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -30,18 +32,18 @@ class AuthRepository {
   /// Currently authenticated Firebase user, or `null` if signed out.
   User? get currentUser => _firebaseAuth.currentUser;
 
-  /// User's display name or a fallback derived from their email.
+  /// User's display name or a default `UserXXXX` fallback.
   String get displayName {
     final user = currentUser;
     final name = user?.displayName?.trim();
     if (name != null && name.isNotEmpty) {
       return name;
     }
-    final userEmail = user?.email?.trim();
-    if (userEmail != null && userEmail.contains('@')) {
-      return userEmail.split('@').first;
+    if (user != null) {
+      final number = (user.uid.hashCode.abs() % 9000) + 1000;
+      return 'User$number';
     }
-    return 'Користувач';
+    return 'User1000';
   }
 
   /// User's email address.
@@ -99,10 +101,11 @@ class AuthRepository {
       );
 
       final trimmedName = displayName?.trim();
-      if (trimmedName != null && trimmedName.isNotEmpty) {
-        await credential.user?.updateDisplayName(trimmedName);
-        await credential.user?.reload();
-      }
+      final effectiveName = (trimmedName != null && trimmedName.isNotEmpty)
+          ? trimmedName
+          : 'User${1000 + Random().nextInt(9000)}';
+      await credential.user?.updateDisplayName(effectiveName);
+      await credential.user?.reload();
 
       await _analytics.logSignUp(signUpMethod: 'email');
       return credential;

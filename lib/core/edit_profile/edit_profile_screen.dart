@@ -117,21 +117,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         photoUrl: _selectedPhotoUrl ?? '',
       );
 
-      final emailVerifySent = await repo.updateEmailIfChanged(
-        newEmail: _emailController.text,
-      );
-
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(
-            content: Text(
-              emailVerifySent
-                  ? 'Профіль оновлено! Перевірте пошту для підтвердження нового email.'
-                  : 'Зміни профілю успішно збережено!',
-            ),
-            backgroundColor: const Color(0xFF009B50),
+          const SnackBar(
+            content: Text('Зміни профілю успішно збережено!'),
+            backgroundColor: Color(0xFF009B50),
           ),
         );
       Navigator.of(context).pop();
@@ -235,7 +227,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Email Input
+                  // Email
                   const Text(
                     'Електронна пошта',
                     style: SemiBoldTextStyle(),
@@ -246,9 +238,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     placeholder: 'name@example.com',
                     mainColor: applicationMainColor,
                     keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.done,
-                    enabled: !_isLoading,
-                    validator: Validators.email,
+                    enabled: false,
                   ),
                   const SizedBox(height: 12),
 
