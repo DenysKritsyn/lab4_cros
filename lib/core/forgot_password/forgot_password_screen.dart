@@ -13,9 +13,6 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
 
   // Main application color
   static const Color applicationMainColor = Color(0xFFE22629);
@@ -23,8 +20,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -102,10 +97,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Підтвердження буде надіслано на пошту',
+                          'Введіть email вашого акаунту, і ми надішлемо вам посилання для зміни пароля',
                           style: TextStyle(
                             fontSize: 14,
                             color: Color(0xFF6B7280),
+                            height: 1.4,
                           ),
                         ),
 
@@ -124,46 +120,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           mainColor: applicationMainColor,
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
 
-                        // New Password Input
-                        const Text(
-                          'Новий пароль',
-                          style: SemiBoldTextStyle(),
-                        ),
-                        const SizedBox(height: 8),
-                        NovaInput(
-                          controller: _passwordController,
-                          placeholder: "*********",
-                          mainColor: applicationMainColor,
-                          isPassword: true,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Confirm Password Input
-                        const Text(
-                          'Підтвердіть пароль',
-                          style: SemiBoldTextStyle(),
-                        ),
-                        const SizedBox(height: 8),
-                        NovaInput(
-                          controller: _confirmPasswordController,
-                          placeholder: '*********',
-                          mainColor: applicationMainColor,
-                          isPassword: true,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Reset Password Button
+                        // Send Reset Link Button
                         NovaMainButton(
                           onPressed: () {
-                            // TODO: Validate the fields and request a password reset.
+                            // Logic will be added in subsequent steps.
                           },
-                          text: 'Відновити пароль',
+                          text: 'Надіслати посилання',
                           fontSize: 16,
-                          icon: Icons.key_outlined,
+                          icon: Icons.mark_email_read_outlined,
                           iconSize: 20,
                           height: 54,
                           color: applicationMainColor,
