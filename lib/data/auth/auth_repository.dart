@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:nova_poshta_mail_tracker/data/auth/auth_exception.dart';
 
-/// Repository that encapsulates all Firebase Authentication operations.
 class AuthRepository {
   AuthRepository({
     FirebaseAuth? firebaseAuth,
@@ -23,16 +22,16 @@ class AuthRepository {
   final FirebaseAnalytics _analytics;
   final FirebaseCrashlytics _crashlytics;
 
-  /// Emits whenever the user signs in, signs out, or updates profile info.
+  // Emits whenever the user signs in, signs out, or updates profile info.
   Stream<User?> userChanges() => _firebaseAuth.userChanges();
 
-  /// Emits whenever the authentication state (signed in / signed out) changes.
+  // Emits whenever the authentication state (signed in / signed out) changes.
   Stream<User?> authStateChanges() => _firebaseAuth.authStateChanges();
 
-  /// Currently authenticated Firebase user, or `null` if signed out.
+  // Authenticated Firebase user. 'null' if signed out.
   User? get currentUser => _firebaseAuth.currentUser;
 
-  /// User's display name or a default `User XXXX` fallback.
+  // User's display name or a default 'User XXXX'.
   String get displayName {
     final user = currentUser;
     final name = user?.displayName?.trim();
@@ -46,16 +45,16 @@ class AuthRepository {
     return 'User 0001';
   }
 
-  /// User's email address.
+  // User's email address.
   String get email => currentUser?.email ?? '';
 
-  /// User's profile photo URL (HTTPS), if set.
+  // User's profile photo.
   String? get photoUrl {
     final url = currentUser?.photoURL?.trim();
     return (url != null && url.isNotEmpty) ? url : null;
   }
 
-  /// Computes 1–2 uppercase initials from the user's name or email.
+  // Computes uppercase initials from the user's name or email.
   String get initials => computeInitials(
     name: currentUser?.displayName,
     email: currentUser?.email,
@@ -65,21 +64,19 @@ class AuthRepository {
     final trimmedName = name?.trim() ?? '';
     if (trimmedName.isNotEmpty) {
       final parts = trimmedName.split(RegExp(r'\s+'));
-      if (parts.length >= 2 &&
-          parts[0].isNotEmpty &&
-          parts[1].isNotEmpty) {
+      if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
         return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
       }
-      return trimmedName.substring(0, trimmedName.length >= 2 ? 2 : 1).toUpperCase();
+      return trimmedName
+          .substring(0, trimmedName.length >= 2 ? 2 : 1)
+          .toUpperCase();
     }
 
     final trimmedEmail = email?.trim() ?? '';
     if (trimmedEmail.isNotEmpty) {
       final local = trimmedEmail.split('@').first;
       final parts = local.split(RegExp(r'[._\-]+'));
-      if (parts.length >= 2 &&
-          parts[0].isNotEmpty &&
-          parts[1].isNotEmpty) {
+      if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
         return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
       }
       return local.substring(0, local.length >= 2 ? 2 : 1).toUpperCase();
@@ -88,7 +85,7 @@ class AuthRepository {
     return 'К';
   }
 
-  // Registers a new user with [email], [password], and optional [displayName].
+  // Registers a new user with email, password, and optional display name.
   Future<UserCredential> signUp({
     required String email,
     required String password,
@@ -103,7 +100,7 @@ class AuthRepository {
       final trimmedName = displayName?.trim();
       final effectiveName = (trimmedName != null && trimmedName.isNotEmpty)
           ? trimmedName
-          : 'User${1000 + Random().nextInt(9000)}';
+          : 'User ${1000 + Random().nextInt(9000)}';
       await credential.user?.updateDisplayName(effectiveName);
       await credential.user?.reload();
 
@@ -117,11 +114,13 @@ class AuthRepository {
         stack,
         reason: 'Unexpected error during signUp',
       );
-      throw const AuthException('Не вдалося створити акаунт. Спробуйте ще раз.');
+      throw const AuthException(
+        'Не вдалося створити акаунт. Спробуйте ще раз.',
+      );
     }
   }
 
-  /// Signs in an existing user with [email] and [password].
+  // Signs in an existing user with email and password.
   Future<UserCredential> signIn({
     required String email,
     required String password,
@@ -146,7 +145,7 @@ class AuthRepository {
     }
   }
 
-  /// Sends a password reset link to [email].
+  // Sends a password reset link to email.
   Future<void> sendPasswordResetEmail({required String email}) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
@@ -165,19 +164,17 @@ class AuthRepository {
     }
   }
 
-  /// Updates the current user's [displayName] and [photoUrl].
-  /// Pass an empty string for [photoUrl] to clear the profile photo.
-  Future<void> updateProfile({
-    String? displayName,
-    String? photoUrl,
-  }) async {
+  // Updates the current user's display name and photo url.
+  // Pass an empty string for photoUrl to clear the profile photo.
+  Future<void> updateProfile({String? displayName, String? photoUrl}) async {
     final user = currentUser;
     if (user == null) {
       throw const AuthException('Користувач не авторизований.');
     }
 
     try {
-      if (displayName != null && displayName.trim() != (user.displayName ?? '')) {
+      if (displayName != null &&
+          displayName.trim() != (user.displayName ?? '')) {
         await user.updateDisplayName(displayName.trim());
       }
 
@@ -202,8 +199,8 @@ class AuthRepository {
     }
   }
 
-  /// Sends a verification email to update the user's email address if it changed.
-  /// Returns `true` if a verification email was sent, or `false` if unchanged.
+  // Sends a verification email to update the user's email address if it changed.
+  // Returns 'true' if a verification email was sent, or 'false' if unchanged.
   Future<bool> updateEmailIfChanged({required String newEmail}) async {
     final user = currentUser;
     if (user == null) {
@@ -231,7 +228,7 @@ class AuthRepository {
     }
   }
 
-  /// Reauthenticates the user with [currentPassword] and updates to [newPassword].
+  // Reauthenticates the user with currentPassword and updates to newPassword.
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -282,7 +279,7 @@ class AuthRepository {
     }
   }
 
-  /// Signs out the current user.
+  // Signs out the current user.
   Future<void> signOut() async {
     try {
       await _firebaseAuth.signOut();
@@ -299,4 +296,3 @@ class AuthRepository {
     }
   }
 }
-

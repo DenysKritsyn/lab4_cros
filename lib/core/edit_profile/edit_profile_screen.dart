@@ -1,3 +1,4 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:nova_poshta_mail_tracker/core/edit_profile/widgets/avatar_picker_sheet.dart';
 import 'package:nova_poshta_mail_tracker/core/edit_profile/widgets/phone_numbers.dart';
@@ -20,28 +21,43 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final List<SavedPhoneCard> phoneNumbers = [
-  SavedPhoneCard(
-    number: '+380 67 312 48 90',
-    label: 'Основний',
-    onEdit: () {
-      // TODO: Edit the primary phone number.
-    },
-    onDelete: () {
-      // TODO: Delete the primary phone number.
-    },
-  ),
-  SavedPhoneCard(
-    number: '+380 93 805 16 42',
-    label: 'Робочий',
-    onEdit: () {
-      // TODO: Edit the work phone number.
-    },
-    onDelete: () {
-      // TODO: Delete the work phone number.
-    },
-  ),
-];
+  List<SavedPhoneCard> _buildPhoneNumbers(BuildContext context) => [
+    SavedPhoneCard(
+      number: '+380 67 312 48 90',
+      label: 'Основний',
+      onEdit: () {
+        FirebaseCrashlytics.instance.recordError(
+          Exception('Тестова нефатальна помилка: редагування номера телефону'),
+          StackTrace.current,
+          reason: 'Редагування номера телефону "Основний"',
+        );
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Нефатальну помилку надіслано до Crashlytics'),
+              backgroundColor: Color(0xFF009B50),
+            ),
+          );
+      },
+      onDelete: () {
+        FirebaseCrashlytics.instance.log(
+          'Crashlytics: фатальний краш при спробі видалити номер',
+        );
+        FirebaseCrashlytics.instance.crash();
+      },
+    ),
+    SavedPhoneCard(
+      number: '+380 93 805 16 42',
+      label: 'Робочий',
+      onEdit: () {
+        // TODO: Edit the work phone number.
+      },
+      onDelete: () {
+        // TODO: Delete the work phone number.
+      },
+    ),
+  ];
 
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
@@ -269,7 +285,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ],
                   ),
                   PhoneNumbers(
-                    cards: phoneNumbers,
+                    cards: _buildPhoneNumbers(context),
                   ),
                   const SizedBox(height: 18),
 
